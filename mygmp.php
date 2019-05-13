@@ -15,6 +15,34 @@ final class MyGMP {
     $instance->__gmpz_set_str($this->mpz, $initval, 0);
   }
 
+  public function getString(int $base = 10): string {
+    $instance = self::_getInstance();
+    $len = $instance->__gmpz_sizeinbase($this->mpz, $base) + 2;
+    $ret = $instance->new("char[$len]");
+    $instance->__gmpz_get_str($ret, $base, $this->mpz);
+
+    $str = '';
+    for ($i = 0; $i < $len; ++$i) {
+      if (ord($ret[$i]) == 0) break;
+      $str .= $ret[$i];
+    }
+
+    return $str;
+  }
+
+  public function __toString() {
+    return $this->getString(10);
+  }
+
+  public function __debugInfo() {
+    return [
+       2 => $this->getString(2),
+       8 => $this->getString(8),
+      10 => $this->getString(10),
+      16 => $this->getString(16),
+    ];
+  }
+
   public function __destruct() {
     self::_getInstance()->__gmpz_clear($this->mpz);
   }
@@ -40,6 +68,8 @@ final class MyGMP {
         void __gmpz_init(mpz_ptr);
         void __gmpz_clear(mpz_ptr);
 
+        size_t __gmpz_sizeinbase(mpz_srcptr, int);
+        char *__gmpz_get_str(char *, int, mpz_srcptr);
         int __gmpz_set_str(mpz_ptr, const char *, int);
         HEADER;
 
