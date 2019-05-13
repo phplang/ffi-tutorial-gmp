@@ -15,6 +15,20 @@ final class MyGMP {
     $instance->__gmpz_set_str($this->mpz, $initval, 0);
   }
 
+  private function _binaryOp(string $op, $value): \MyGMP {
+    if (!($value instanceof \MyGMP)) { $value = new \MyGMP((string)$value); }
+
+    $ret = new \MyGMP;
+    self::_getInstance()->{$op}($ret->mpz, $this->mpz, $value->mpz);
+    return $ret;
+  }
+
+  public function add($value): \MyGMP { return $this->_binaryOp('__gmpz_add', $value); }
+  public function sub($value): \MyGMP { return $this->_binaryOp('__gmpz_sub', $value); }
+  public function mul($value): \MyGMP { return $this->_binaryOp('__gmpz_mul', $value); }
+  public function div($value): \MyGMP { return $this->_binaryOp('__gmpz_fdiv_q', $value); }
+  public function gcd($value): \MyGMP { return $this->_binaryOp('__gmpz_gcd', $value); }
+
   public function getString(int $base = 10): string {
     $instance = self::_getInstance();
     $len = $instance->__gmpz_sizeinbase($this->mpz, $base) + 2;
@@ -71,6 +85,12 @@ final class MyGMP {
         size_t __gmpz_sizeinbase(mpz_srcptr, int);
         char *__gmpz_get_str(char *, int, mpz_srcptr);
         int __gmpz_set_str(mpz_ptr, const char *, int);
+
+        void __gmpz_add(mpz_ptr, mpz_srcptr, mpz_srcptr);
+        void __gmpz_sub(mpz_ptr, mpz_srcptr, mpz_srcptr);
+        void __gmpz_mul(mpz_ptr, mpz_srcptr, mpz_srcptr);
+        void __gmpz_fdiv_q(mpz_ptr, mpz_srcptr, mpz_srcptr);
+        void __gmpz_gcd(mpz_ptr, mpz_srcptr, mpz_srcptr);
         HEADER;
 
     self::$instance = \FFI::cdef($header, 'libgmp.so');
